@@ -4,6 +4,7 @@ numpy
 pandas
 plotly
 ultralytics
-scipy
 torch
 torchvision
+scipy
+fpdf
