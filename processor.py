@@ -22,12 +22,10 @@ class TrafficAnalyzer:
             if results[0].boxes.id is not None:
                 for track_id in results[0].boxes.id.int().cpu().numpy():
                     counted_ids.add(track_id)
-                    # Simulated speed calculation for demonstration
                     speed = np.random.randint(20, 100) 
                     driver_profiles[track_id]["speeds"].append(speed)
                     if speed > thresholds['speed_limit']:
                         driver_profiles[track_id]["infractions"].add("Speeding")
-        
         cap.release()
         
         data = []
@@ -50,4 +48,5 @@ class TrafficAnalyzer:
         for _, row in df.iterrows():
             txt = f"Driver {row['Driver Track ID']} | Risk: {row['Risk']} | Speed: {row['Average Speed (km/h)']} km/h"
             pdf.cell(190, 10, txt=txt, ln=True)
-        return pdf.output(dest='S')
+        # Convert bytearray to bytes explicitly
+        return bytes(pdf.output())
