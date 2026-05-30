@@ -1,4 +1,3 @@
-
 import streamlit as st
 import tempfile
 from processor import TrafficAnalyzer
@@ -30,10 +29,17 @@ if uploaded_file:
 
 if st.session_state.analysis_done:
     st.subheader("📊 Infraction Catalog")
-    st.dataframe(st.session_state.results_df, use_container_width=True)
+    st.dataframe(st.session_state.results_df, width='stretch')
     
     pdf_bytes = st.session_state.analyzer.generate_pdf(st.session_state.results_df)
-    st.download_button("📥 Download A4 PDF Report", data=pdf_bytes, file_name="Report.pdf", mime="application/pdf")
+    
+    if pdf_bytes:
+        st.download_button(
+            label="📥 Download A4 PDF Report",
+            data=pdf_bytes,
+            file_name="Report.pdf",
+            mime="application/pdf"
+        )
     
     if st.button("Clear Results"):
         st.session_state.analysis_done = False
