@@ -1,10 +1,4 @@
 streamlit
 opencv-python-headless
-numpy
 pandas
-plotly
-ultralytics
-torch
-torchvision
-scipy
-fpdf
+numpy
