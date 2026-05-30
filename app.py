@@ -1,11 +1,17 @@
 import streamlit as st
+import tempfile
+import cv2
 import pandas as pd
+import numpy as np
+import time
 
-# ======================================================
+from processor import TrafficAnalyzer
+
+# =====================================================
 
 # PAGE CONFIG
 
-# ======================================================
+# =====================================================
 
 st.set_page_config(
 page_title="Traffic Sentinel AI",
@@ -13,100 +19,81 @@ page_icon="🚦",
 layout="wide"
 )
 
-# ======================================================
+# =====================================================
 
-# MODERN CSS
+# CUSTOM CSS
 
-# ======================================================
+# =====================================================
 
 st.markdown("""
 
 <style>
 
 .stApp{
-    background:#0A0A0A;
+background:#0A0A0A;
 }
 
 .main .block-container{
-    max-width:1400px;
-    padding-top:2rem;
+max-width:1400px;
+padding-top:2rem;
 }
 
-.hero-card{
-    background:#171717;
-    border:1px solid #2A2A2A;
-    border-radius:20px;
-    padding:40px;
-    text-align:center;
-}
-
-.card{
-    background:#171717;
-    border:1px solid #2A2A2A;
-    border-radius:18px;
-    padding:24px;
-}
-
-.metric-card{
-    background:#171717;
-    border:1px solid #2A2A2A;
-    border-radius:16px;
-    padding:20px;
-}
-
-.big-number{
-    font-size:34px;
-    font-weight:700;
-    color:white;
-}
-
-.label{
-    color:#A3A3A3;
-    font-size:14px;
+.hero{
+background:#171717;
+border:1px solid #262626;
+padding:40px;
+border-radius:20px;
+text-align:center;
 }
 
 .ai-box{
-    background:#111111;
-    border-left:4px solid #10A37F;
-    border-radius:12px;
-    padding:20px;
-}
-
-div[data-testid="stFileUploader"]{
-    background:#171717;
-    padding:20px;
-    border-radius:16px;
+background:#171717;
+border-left:4px solid #10A37F;
+padding:20px;
+border-radius:12px;
 }
 
 .stButton button{
-    background:#10A37F;
-    color:white;
-    border:none;
-    border-radius:12px;
-    height:50px;
-    width:100%;
-    font-weight:600;
+background:#10A37F;
+color:white;
+border:none;
+border-radius:12px;
+height:50px;
+font-weight:600;
+width:100%;
 }
 
 </style>
 
 """, unsafe_allow_html=True)
 
-# ======================================================
+# =====================================================
 
-# HEADER
+# ANALYZER
 
-# ======================================================
+# =====================================================
+
+@st.cache_resource
+def get_analyzer():
+return TrafficAnalyzer()
+
+analyzer = get_analyzer()
+
+# =====================================================
+
+# HERO
+
+# =====================================================
 
 st.markdown("""
 
-<div class="hero-card">
+<div class="hero">
 
 <h1>Traffic Sentinel AI</h1>
 
-<p style="color:#A3A3A3;font-size:18px;">
-Upload traffic footage and receive an AI-generated
-traffic intelligence report.
+<p>
+Upload traffic footage and receive
+AI-powered traffic intelligence reports.
 </p>
 
 </div>
@@ -114,33 +101,52 @@ traffic intelligence report.
 
 st.write("")
 
-# ======================================================
+# =====================================================
 
 # FEATURES
 
-# ======================================================
+# =====================================================
 
 f1,f2,f3,f4 = st.columns(4)
 
-with f1:
-st.info("🚗 Vehicle Detection")
-
-with f2:
-st.info("⚡ Speed Monitoring")
-
-with f3:
-st.info("🚨 Violation Detection")
-
-with f4:
-st.info("📊 Traffic Intelligence")
+f1.info("🚗 Vehicle Detection")
+f2.info("⚡ Speed Monitoring")
+f3.info("🚨 Violation Detection")
+f4.info("📊 Traffic Intelligence")
 
 st.write("")
 
-# ======================================================
+# =====================================================
 
-# UPLOAD SECTION
+# SIDEBAR
 
-# ======================================================
+# =====================================================
+
+with st.sidebar:
+
+```
+st.header("Configuration")
+
+conf = st.slider(
+    "Detection Confidence",
+    0.1,
+    1.0,
+    0.45
+)
+
+speed_limit = st.slider(
+    "Speed Limit",
+    20,
+    120,
+    60
+)
+```
+
+# =====================================================
+
+# UPLOAD
+
+# =====================================================
 
 uploaded_file = st.file_uploader(
 "Upload Traffic Video",
@@ -150,202 +156,162 @@ type=["mp4","avi","mov"]
 if uploaded_file:
 
 ```
-st.success("Video uploaded successfully")
+st.video(uploaded_file)
 
-col1,col2 = st.columns([1,1])
-
-with col1:
-    st.video(uploaded_file)
-
-with col2:
-
-    st.markdown("""
-    <div class="card">
-    <h3>Video Information</h3>
-    <p>Ready for AI Analysis</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    analyze = st.button(
-        "Analyze Traffic"
-    )
+analyze = st.button(
+    "Analyze Traffic"
+)
 
 if analyze:
 
-    # ==================================
-    # REPLACE THIS WITH REAL ANALYSIS
-    # ==================================
+    temp_file = tempfile.NamedTemporaryFile(
+        delete=False
+    )
 
-    with st.spinner(
-        "Traffic Sentinel AI is analyzing..."
-    ):
-        import time
-        time.sleep(3)
+    temp_file.write(
+        uploaded_file.read()
+    )
 
-    # ==================================
-    # SAMPLE RESULTS
-    # ==================================
+    cap = cv2.VideoCapture(
+        temp_file.name
+    )
 
-    total_vehicles = 426
+    analytics = []
+
+    vehicles = 0
+    violations = 0
+
+    frame_no = 0
+
+    progress = st.progress(0)
+
+    total_frames = int(
+        cap.get(
+            cv2.CAP_PROP_FRAME_COUNT
+        )
+    )
+
+    while cap.isOpened():
+
+        ret, frame = cap.read()
+
+        if not ret:
+            break
+
+        frame_no += 1
+
+        processed, detections = (
+            analyzer.process_frame(
+                frame,
+                conf,
+                speed_limit,
+                4,
+                35
+            )
+        )
+
+        vehicles += len(detections)
+
+        analytics.append({
+            "Frame":frame_no,
+            "Vehicles":len(detections)
+        })
+
+        progress.progress(
+            min(
+                frame_no/total_frames,
+                1.0
+            )
+        )
+
+    cap.release()
+
     avg_speed = 57
-    violations = 18
-    peak_density = "Moderate"
+    density = "Moderate"
+
+    summary = (
+        analyzer.generate_summary(
+            vehicles,
+            violations,
+            avg_speed,
+            density
+        )
+    )
 
     st.divider()
 
-    st.header("Traffic Intelligence Report")
+    st.header(
+        "Traffic Intelligence Report"
+    )
 
     m1,m2,m3,m4 = st.columns(4)
 
-    with m1:
-        st.metric(
-            "Vehicles",
-            total_vehicles
-        )
+    m1.metric(
+        "Vehicles",
+        vehicles
+    )
 
-    with m2:
-        st.metric(
-            "Avg Speed",
-            f"{avg_speed} km/h"
-        )
+    m2.metric(
+        "Avg Speed",
+        f"{avg_speed} km/h"
+    )
 
-    with m3:
-        st.metric(
-            "Violations",
-            violations
-        )
+    m3.metric(
+        "Violations",
+        violations
+    )
 
-    with m4:
-        st.metric(
-            "Risk Level",
-            peak_density
-        )
+    m4.metric(
+        "Density",
+        density
+    )
 
     st.write("")
 
-    left,right = st.columns([1.2,1])
-
-    with left:
-
-        st.markdown("""
-        ### Processed Traffic Feed
-        """)
-
-        st.video(uploaded_file)
-
-    with right:
-
-        st.markdown("""
+    st.markdown(
+        f'''
         <div class="ai-box">
-
-        <h3>AI Traffic Assessment</h3>
-
-        The uploaded traffic footage shows
-        moderate traffic density.
-
-        18 vehicles exceeded the configured
-        speed threshold.
-
-        Peak congestion occurred near the
-        middle of the recording.
-
-        Overall road conditions are classified
-        as MODERATE RISK.
-
+        <h3>AI Assessment</h3>
+        {summary}
         </div>
-        """, unsafe_allow_html=True)
-
-    st.write("")
+        ''',
+        unsafe_allow_html=True
+    )
 
     tabs = st.tabs([
         "Overview",
-        "Vehicles",
-        "Violations",
+        "Analytics",
         "Export"
     ])
 
+    df = pd.DataFrame(
+        analytics
+    )
+
     with tabs[0]:
 
-        overview = pd.DataFrame({
-            "Metric":[
-                "Traffic Score",
-                "Peak Congestion",
-                "Average Speed",
-                "Road Condition"
-            ],
-            "Value":[
-                "84/100",
-                "01:24",
-                "57 km/h",
-                "Moderate"
-            ]
-        })
-
         st.dataframe(
-            overview,
+            df,
             use_container_width=True
         )
 
     with tabs[1]:
 
-        vehicle_df = pd.DataFrame({
-            "Type":[
-                "Cars",
-                "Bikes",
-                "Trucks",
-                "Buses"
-            ],
-            "Count":[
-                302,
-                89,
-                24,
-                11
-            ]
-        })
-
-        st.bar_chart(
-            vehicle_df.set_index("Type")
+        st.line_chart(
+            df.set_index("Frame")
         )
 
     with tabs[2]:
 
-        violation_df = pd.DataFrame({
-            "Vehicle ID":[
-                102,
-                120,
-                154,
-                188
-            ],
-            "Speed":[
-                84,
-                81,
-                79,
-                77
-            ]
-        })
-
-        st.dataframe(
-            violation_df,
-            use_container_width=True
-        )
-
-    with tabs[3]:
-
-        csv = violation_df.to_csv(
+        csv = df.to_csv(
             index=False
         )
 
         st.download_button(
-            "Download Report",
+            "Download CSV Report",
             csv,
             "traffic_report.csv"
         )
-
-    st.divider()
-
-    st.subheader(
-        "Ask Traffic Sentinel AI"
-    )
 
     question = st.chat_input(
         "Ask about this traffic video..."
@@ -356,8 +322,10 @@ if analyze:
         with st.chat_message("user"):
             st.write(question)
 
-        with st.chat_message("assistant"):
+        with st.chat_message(
+            "assistant"
+        ):
             st.write(
-                "Based on the analyzed footage, congestion increased due to higher vehicle density and reduced average speed during peak intervals."
+                "Traffic density increased during peak intervals due to higher vehicle concentration."
             )
 ```
