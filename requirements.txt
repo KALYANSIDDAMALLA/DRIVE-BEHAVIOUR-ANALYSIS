@@ -1,4 +1,9 @@
 streamlit
 opencv-python-headless
-pandas
 numpy
+pandas
+plotly
+ultralytics
+supervision
+fpdf2
+scipy
