@@ -1,8 +1,7 @@
-
-pip freeze > requirements.txt
 streamlit
-opencv-python-headless
 ultralytics
+opencv-python-headless
 numpy
 pandas
-torch
+lapx
+fpdf2
