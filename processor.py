@@ -1,52 +1,29 @@
 import cv2
 import numpy as np
-import pandas as pd
 from ultralytics import YOLO
-from fpdf import FPDF
-from collections import defaultdict, deque
+import math
 
 class TrafficAnalyzer:
-    def __init__(self, model_path="yolov8n.pt"):
-        self.model = YOLO(model_path)
-    
-    def process_video(self, video_path, thresholds):
-        cap = cv2.VideoCapture(video_path)
-        counted_ids = set()
-        driver_profiles = defaultdict(lambda: {"speeds": [], "infractions": set()})
-        
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret: break
-            
-            results = self.model.track(frame, persist=True, verbose=False)
-            if results[0].boxes.id is not None:
-                for track_id in results[0].boxes.id.int().cpu().numpy():
-                    counted_ids.add(track_id)
-                    speed = np.random.randint(20, 100) 
-                    driver_profiles[track_id]["speeds"].append(speed)
-                    if speed > thresholds['speed_limit']:
-                        driver_profiles[track_id]["infractions"].add("Speeding")
-        cap.release()
-        
-        data = []
-        for tid in counted_ids:
-            data.append({
-                "Driver Track ID": tid,
-                "Average Speed (km/h)": int(np.mean(driver_profiles[tid]["speeds"])),
-                "Detected Infractions": ", ".join(driver_profiles[tid]["infractions"]) or "None",
-                "Risk": "HIGH" if driver_profiles[tid]["infractions"] else "LOW"
-            })
-        return pd.DataFrame(data)
+    def __init__(self, model_path="yolov8n.pt", device="cpu"):
+        self.model = YOLO(model_path).to(device)
+        self.class_labels = {2: "Car", 3: "Bike", 5: "Bus", 7: "Truck"}
 
-    def generate_pdf(self, df):
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(190, 10, "Driver Behavior Analysis Report", ln=True, align='C')
-        pdf.ln(10)
-        pdf.set_font("Arial", size=12)
-        for _, row in df.iterrows():
-            txt = f"Driver {row['Driver Track ID']} | Risk: {row['Risk']} | Speed: {row['Average Speed (km/h)']} km/h"
-            pdf.cell(190, 10, txt=txt, ln=True)
-        # Convert bytearray to bytes explicitly
-        return bytes(pdf.output())
+    def process_frame(self, frame, conf, speed_limit, accel_thresh, weaving_thresh):
+        """Analyzes a single frame for behavioral metrics."""
+        results = self.model.track(frame, persist=True, conf=conf, classes=[2, 3, 5, 7], verbose=False)
+        annotated_frame = frame.copy()
+        metrics = []
+
+        if results[0].boxes.id is not None:
+            boxes = results[0].boxes.xyxy.cpu().numpy()
+            ids = results[0].boxes.id.cpu().numpy().astype(int)
+            
+            for box, tid in zip(boxes, ids):
+                x1, y1, x2, y2 = map(int, box)
+                cx, cy = int((x1 + x2) / 2), int((y1 + y2) / 2)
+                
+                # Logic: Annotate and collect behavioral data
+                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                metrics.append({"id": tid, "center": (cx, cy)})
+                
+        return annotated_frame, metrics
