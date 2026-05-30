@@ -1,5 +1,9 @@
 streamlit
-ultralytics
 opencv-python-headless
 numpy
 pandas
+plotly
+ultralytics
+scipy
+torch
+torchvision
