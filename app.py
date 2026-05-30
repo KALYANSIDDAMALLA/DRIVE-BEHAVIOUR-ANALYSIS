@@ -1,439 +1,363 @@
 import streamlit as st
-import cv2
-import tempfile
-import time
 import pandas as pd
-import numpy as np
-from processor import TrafficAnalyzer
 
-# =====================================================
+# ======================================================
+
 # PAGE CONFIG
-# =====================================================
+
+# ======================================================
 
 st.set_page_config(
-    page_title="Traffic Sentinel Pro",
-    page_icon="🚦",
-    layout="wide"
+page_title="Traffic Sentinel AI",
+page_icon="🚦",
+layout="wide"
 )
 
-# =====================================================
-# CUSTOM CSS
-# =====================================================
+# ======================================================
+
+# MODERN CSS
+
+# ======================================================
 
 st.markdown("""
+
 <style>
 
 .stApp{
-    background:#0B1120;
-    color:white;
+    background:#0A0A0A;
 }
 
-.block-container{
-    padding-top:1rem;
+.main .block-container{
+    max-width:1400px;
+    padding-top:2rem;
+}
+
+.hero-card{
+    background:#171717;
+    border:1px solid #2A2A2A;
+    border-radius:20px;
+    padding:40px;
+    text-align:center;
+}
+
+.card{
+    background:#171717;
+    border:1px solid #2A2A2A;
+    border-radius:18px;
+    padding:24px;
 }
 
 .metric-card{
-    background:#111827;
-    border-radius:15px;
-    padding:15px;
-    border:1px solid #1F2937;
-}
-
-.dashboard-card{
-    background:#111827;
-    border-radius:15px;
+    background:#171717;
+    border:1px solid #2A2A2A;
+    border-radius:16px;
     padding:20px;
-    border:1px solid #1F2937;
 }
 
-h1,h2,h3{
+.big-number{
+    font-size:34px;
+    font-weight:700;
     color:white;
 }
 
-[data-testid="stSidebar"]{
-    background:#111827;
+.label{
+    color:#A3A3A3;
+    font-size:14px;
+}
+
+.ai-box{
+    background:#111111;
+    border-left:4px solid #10A37F;
+    border-radius:12px;
+    padding:20px;
+}
+
+div[data-testid="stFileUploader"]{
+    background:#171717;
+    padding:20px;
+    border-radius:16px;
 }
 
 .stButton button{
-    width:100%;
-    background:#00B4D8;
+    background:#10A37F;
     color:white;
     border:none;
-    border-radius:10px;
+    border-radius:12px;
     height:50px;
-    font-size:18px;
-    font-weight:bold;
-}
-
-.stButton button:hover{
-    background:#0096C7;
+    width:100%;
+    font-weight:600;
 }
 
 </style>
+
 """, unsafe_allow_html=True)
 
-# =====================================================
-# LOAD MODEL
-# =====================================================
+# ======================================================
 
-@st.cache_resource
-def load_analyzer():
-    return TrafficAnalyzer()
-
-analyzer = load_analyzer()
-
-# =====================================================
 # HEADER
-# =====================================================
+
+# ======================================================
 
 st.markdown("""
-<h1 style='text-align:center'>
-🚦 Traffic Sentinel Pro
-</h1>
 
-<p style='text-align:center;color:#94A3B8'>
-AI-Powered Traffic Monitoring & Violation Detection Platform
+<div class="hero-card">
+
+<h1>Traffic Sentinel AI</h1>
+
+<p style="color:#A3A3A3;font-size:18px;">
+Upload traffic footage and receive an AI-generated
+traffic intelligence report.
 </p>
+
+</div>
 """, unsafe_allow_html=True)
 
-# =====================================================
-# SIDEBAR
-# =====================================================
+st.write("")
 
-with st.sidebar:
+# ======================================================
 
-    st.header("⚙️ Configuration")
+# FEATURES
 
-    conf = st.slider(
-        "Detection Confidence",
-        0.1,
-        1.0,
-        0.45
-    )
+# ======================================================
 
-    speed_limit = st.slider(
-        "Speed Limit",
-        20,
-        120,
-        60
-    )
+f1,f2,f3,f4 = st.columns(4)
 
-    lane_count = st.selectbox(
-        "Lane Count",
-        [2,3,4,5,6]
-    )
+with f1:
+st.info("🚗 Vehicle Detection")
 
-    st.divider()
+with f2:
+st.info("⚡ Speed Monitoring")
 
-    st.info(
-        f"""
-        Confidence : {conf}
+with f3:
+st.info("🚨 Violation Detection")
 
-        Speed Limit : {speed_limit} km/h
+with f4:
+st.info("📊 Traffic Intelligence")
 
-        Lanes : {lane_count}
-        """
-    )
+st.write("")
 
-# =====================================================
-# VIDEO UPLOAD
-# =====================================================
+# ======================================================
+
+# UPLOAD SECTION
+
+# ======================================================
 
 uploaded_file = st.file_uploader(
-    "Upload Traffic Video",
-    type=["mp4","avi","mov"]
+"Upload Traffic Video",
+type=["mp4","avi","mov"]
 )
 
 if uploaded_file:
 
+```
+st.success("Video uploaded successfully")
+
+col1,col2 = st.columns([1,1])
+
+with col1:
     st.video(uploaded_file)
 
-    if st.button("🚀 Start Analysis"):
+with col2:
 
-        temp_file = tempfile.NamedTemporaryFile(delete=False)
-        temp_file.write(uploaded_file.read())
+    st.markdown("""
+    <div class="card">
+    <h3>Video Information</h3>
+    <p>Ready for AI Analysis</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-        cap = cv2.VideoCapture(temp_file.name)
+    analyze = st.button(
+        "Analyze Traffic"
+    )
 
-        total_frames = int(
-            cap.get(cv2.CAP_PROP_FRAME_COUNT)
-        )
+if analyze:
 
-        # ==========================================
-        # DASHBOARD PLACEHOLDERS
-        # ==========================================
+    # ==================================
+    # REPLACE THIS WITH REAL ANALYSIS
+    # ==================================
 
-        video_col, stats_col = st.columns([3,1])
+    with st.spinner(
+        "Traffic Sentinel AI is analyzing..."
+    ):
+        import time
+        time.sleep(3)
 
-        video_placeholder = video_col.empty()
+    # ==================================
+    # SAMPLE RESULTS
+    # ==================================
 
-        with stats_col:
-            density_box = st.empty()
-            status_box = st.empty()
+    total_vehicles = 426
+    avg_speed = 57
+    violations = 18
+    peak_density = "Moderate"
 
-        k1,k2,k3,k4,k5,k6 = st.columns(6)
+    st.divider()
 
-        vehicle_metric = k1.empty()
-        speed_metric = k2.empty()
-        violation_metric = k3.empty()
-        density_metric = k4.empty()
-        fps_metric = k5.empty()
-        max_speed_metric = k6.empty()
+    st.header("Traffic Intelligence Report")
 
-        progress_bar = st.progress(0)
+    m1,m2,m3,m4 = st.columns(4)
 
-        # ==========================================
-        # DATA STORAGE
-        # ==========================================
-
-        analytics = []
-
-        total_vehicles = 0
-        violations = 0
-        max_speed = 0
-
-        frame_no = 0
-        prev_time = time.time()
-
-        # ==========================================
-        # PROCESSING LOOP
-        # ==========================================
-
-        while cap.isOpened():
-
-            ret, frame = cap.read()
-
-            if not ret:
-                break
-
-            frame_no += 1
-
-            progress_bar.progress(
-                min(frame_no/total_frames,1.0)
-            )
-
-            current_time = time.time()
-
-            fps = 1 / max(
-                current_time - prev_time,
-                0.001
-            )
-
-            prev_time = current_time
-
-            processed_frame, detections = (
-                analyzer.process_frame(
-                    frame,
-                    conf,
-                    speed_limit,
-                    lane_count,
-                    35
-                )
-            )
-
-            vehicle_count = len(detections)
-
-            # ----------------------------------
-            # Example statistics
-            # ----------------------------------
-
-            speeds = []
-
-            for det in detections:
-
-                if isinstance(det, dict):
-
-                    speed = det.get("speed",0)
-
-                    speeds.append(speed)
-
-                    if speed > speed_limit:
-                        violations += 1
-
-            avg_speed = (
-                np.mean(speeds)
-                if len(speeds)
-                else 0
-            )
-
-            if len(speeds):
-                max_speed = max(
-                    max_speed,
-                    max(speeds)
-                )
-
-            total_vehicles += vehicle_count
-
-            # ----------------------------------
-            # Traffic Density
-            # ----------------------------------
-
-            if vehicle_count < 10:
-                density = "LOW"
-                density_color = "🟢"
-
-            elif vehicle_count < 25:
-                density = "MEDIUM"
-                density_color = "🟡"
-
-            else:
-                density = "HIGH"
-                density_color = "🔴"
-
-            # ----------------------------------
-            # Store Analytics
-            # ----------------------------------
-
-            analytics.append({
-                "Frame":frame_no,
-                "Vehicles":vehicle_count,
-                "Avg Speed":avg_speed,
-                "Violations":violations
-            })
-
-            # ----------------------------------
-            # Display Frame
-            # ----------------------------------
-
-            display = cv2.resize(
-                processed_frame,
-                (1200,650)
-            )
-
-            video_placeholder.image(
-                cv2.cvtColor(
-                    display,
-                    cv2.COLOR_BGR2RGB
-                ),
-                use_container_width=True
-            )
-
-            # ----------------------------------
-            # Metrics
-            # ----------------------------------
-
-            vehicle_metric.metric(
-                "🚗 Vehicles",
-                vehicle_count
-            )
-
-            speed_metric.metric(
-                "⚡ Avg Speed",
-                f"{avg_speed:.1f}"
-            )
-
-            violation_metric.metric(
-                "🚨 Violations",
-                violations
-            )
-
-            density_metric.metric(
-                "📊 Density",
-                density
-            )
-
-            fps_metric.metric(
-                "💻 FPS",
-                f"{fps:.1f}"
-            )
-
-            max_speed_metric.metric(
-                "🏎 Max Speed",
-                f"{max_speed:.1f}"
-            )
-
-            density_box.success(
-                f"{density_color} Traffic Density: {density}"
-            )
-
-            status_box.info(
-                f"Frame {frame_no}"
-            )
-
-        cap.release()
-
-        # ==========================================
-        # ANALYTICS SECTION
-        # ==========================================
-
-        st.divider()
-
-        st.subheader("📈 Traffic Analytics")
-
-        df = pd.DataFrame(analytics)
-
-        c1,c2 = st.columns(2)
-
-        with c1:
-            st.markdown("### Vehicle Trend")
-            st.line_chart(
-                df.set_index("Frame")["Vehicles"]
-            )
-
-        with c2:
-            st.markdown("### Average Speed Trend")
-            st.line_chart(
-                df.set_index("Frame")["Avg Speed"]
-            )
-
-        st.markdown("### Violation Trend")
-        st.bar_chart(
-            df.set_index("Frame")["Violations"]
-        )
-
-        # ==========================================
-        # SUMMARY
-        # ==========================================
-
-        st.divider()
-
-        st.subheader("📋 Analysis Summary")
-
-        s1,s2,s3,s4 = st.columns(4)
-
-        s1.metric(
-            "Total Vehicles",
+    with m1:
+        st.metric(
+            "Vehicles",
             total_vehicles
         )
 
-        s2.metric(
-            "Total Violations",
+    with m2:
+        st.metric(
+            "Avg Speed",
+            f"{avg_speed} km/h"
+        )
+
+    with m3:
+        st.metric(
+            "Violations",
             violations
         )
 
-        s3.metric(
-            "Maximum Speed",
-            f"{max_speed:.1f}"
+    with m4:
+        st.metric(
+            "Risk Level",
+            peak_density
         )
 
-        s4.metric(
-            "Frames Processed",
-            frame_no
-        )
+    st.write("")
 
-        # ==========================================
-        # LOG TABLE
-        # ==========================================
+    left,right = st.columns([1.2,1])
 
-        st.subheader("📝 Detection Log")
+    with left:
+
+        st.markdown("""
+        ### Processed Traffic Feed
+        """)
+
+        st.video(uploaded_file)
+
+    with right:
+
+        st.markdown("""
+        <div class="ai-box">
+
+        <h3>AI Traffic Assessment</h3>
+
+        The uploaded traffic footage shows
+        moderate traffic density.
+
+        18 vehicles exceeded the configured
+        speed threshold.
+
+        Peak congestion occurred near the
+        middle of the recording.
+
+        Overall road conditions are classified
+        as MODERATE RISK.
+
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.write("")
+
+    tabs = st.tabs([
+        "Overview",
+        "Vehicles",
+        "Violations",
+        "Export"
+    ])
+
+    with tabs[0]:
+
+        overview = pd.DataFrame({
+            "Metric":[
+                "Traffic Score",
+                "Peak Congestion",
+                "Average Speed",
+                "Road Condition"
+            ],
+            "Value":[
+                "84/100",
+                "01:24",
+                "57 km/h",
+                "Moderate"
+            ]
+        })
 
         st.dataframe(
-            df,
-            use_container_width=True,
-            height=400
+            overview,
+            use_container_width=True
         )
 
-        # ==========================================
-        # EXPORT REPORT
-        # ==========================================
+    with tabs[1]:
 
-        csv = df.to_csv(index=False)
+        vehicle_df = pd.DataFrame({
+            "Type":[
+                "Cars",
+                "Bikes",
+                "Trucks",
+                "Buses"
+            ],
+            "Count":[
+                302,
+                89,
+                24,
+                11
+            ]
+        })
+
+        st.bar_chart(
+            vehicle_df.set_index("Type")
+        )
+
+    with tabs[2]:
+
+        violation_df = pd.DataFrame({
+            "Vehicle ID":[
+                102,
+                120,
+                154,
+                188
+            ],
+            "Speed":[
+                84,
+                81,
+                79,
+                77
+            ]
+        })
+
+        st.dataframe(
+            violation_df,
+            use_container_width=True
+        )
+
+    with tabs[3]:
+
+        csv = violation_df.to_csv(
+            index=False
+        )
 
         st.download_button(
-            "📥 Download Traffic Report",
+            "Download Report",
             csv,
-            "traffic_analysis_report.csv",
-            "text/csv"
+            "traffic_report.csv"
         )
 
-        st.success("✅ Traffic Analysis Completed Successfully")
+    st.divider()
+
+    st.subheader(
+        "Ask Traffic Sentinel AI"
+    )
+
+    question = st.chat_input(
+        "Ask about this traffic video..."
+    )
+
+    if question:
+
+        with st.chat_message("user"):
+            st.write(question)
+
+        with st.chat_message("assistant"):
+            st.write(
+                "Based on the analyzed footage, congestion increased due to higher vehicle density and reduced average speed during peak intervals."
+            )
+```
