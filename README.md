@@ -23,6 +23,24 @@ AI-powered traffic monitoring and behavior analysis platform.
 - Traffic Analytics
 - AI Report Generation
 
+  
+---
+
+# Step 7 — Push to GitHub
+
+```bash
+git init
+
+git add .
+
+git commit -m "Initial commit"
+
+git branch -M main
+
+git remote add origin YOUR_REPO_URL
+
+git push -u origin main
+
 ## Run
 
 ```bash
