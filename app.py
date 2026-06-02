@@ -1,66 +1,231 @@
 import streamlit as st
 import tempfile
+import pandas as pd
 from processor import TrafficAnalyzer
 
-# Page Configuration
-st.set_page_config(page_title="GuardianAI | Fleet Safety", layout="wide", page_icon="🛡️")
+# --------------------------------------------------
+# PAGE CONFIG
+# --------------------------------------------------
 
-# Professional SaaS Styling
+st.set_page_config(
+    page_title="GuardianAI Fleet Auditor",
+    page_icon="🚦",
+    layout="wide"
+)
+
+# --------------------------------------------------
+# CUSTOM CSS
+# --------------------------------------------------
+
 st.markdown("""
-    <style>
-    .hero { text-align: center; padding: 3rem 1rem; background: white; border-bottom: 2px solid #e1e4e8; margin-bottom: 2rem; border-radius: 10px; }
-    h1 { color: #1a2a6c; font-weight: 800; }
-    .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-    div.stButton > button { background-color: #007bff; color: white; border-radius: 8px; font-weight: bold; width: 100%; height: 3em; border: none; }
-    div.stButton > button:hover { background-color: #0056b3; }
-    </style>
+<style>
+
+.main {
+    background-color: #0f172a;
+}
+
+.big-title {
+    font-size: 42px;
+    font-weight: 800;
+    color: white;
+}
+
+.subtitle {
+    font-size: 18px;
+    color: #cbd5e1;
+}
+
+.metric-box {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.metric-value {
+    font-size: 30px;
+    font-weight: bold;
+    color: #38bdf8;
+}
+
+.metric-label {
+    color: white;
+}
+
+</style>
 """, unsafe_allow_html=True)
 
-# Header
-st.markdown('<div class="hero"><h1>GuardianAI Fleet Auditor</h1><p>Enterprise-grade driver behavior analytics powered by deep learning.</p></div>', unsafe_allow_html=True)
+# --------------------------------------------------
+# HEADER
+# --------------------------------------------------
 
-# Main Interaction Engine
-col_left, col_right = st.columns([1, 1])
+st.markdown(
+    """
+    <div class='big-title'>
+        🚦 GuardianAI Fleet Auditor
+    </div>
 
-if 'analyzer' not in st.session_state:
-    st.session_state.analyzer = TrafficAnalyzer()
+    <div class='subtitle'>
+        Enterprise-grade Driver Behaviour Analysis Platform
+    </div>
 
-with col_left:
-    st.markdown('<div class="card"><h3>Upload Footage</h3>', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("Select your traffic footage (MP4)", type=["mp4"])
-    if uploaded_file and st.button("RUN FORENSIC ANALYSIS"):
-        with st.spinner("Analyzing high-resolution frames..."):
-            tfile = tempfile.NamedTemporaryFile(delete=False)
-            tfile.write(uploaded_file.read())
-            df = st.session_state.analyzer.process_video(tfile.name, {'speed_limit': 70})
-            st.session_state.results = df
-            st.session_state.done = True
-    st.markdown('</div>', unsafe_allow_html=True)
+    <br>
+    """,
+    unsafe_allow_html=True
+)
 
-with col_right:
-    st.markdown('<div class="card"><h3>Why GuardianAI?</h3><ul><li><b>Real-time Detection:</b> Identify unsafe maneuvers instantly.</li><li><b>Compliance Ready:</b> Auto-generate audit-grade PDF reports.</li><li><b>GDPR Compliant:</b> Privacy-first architecture.</li></ul></div>', unsafe_allow_html=True)
+# --------------------------------------------------
+# SIDEBAR
+# --------------------------------------------------
 
-# Results Section
-if st.session_state.get('done'):
-    st.subheader("📊 Audit Results Overview")
-    k1, k2 = st.columns(2)
-    k1.metric("Vehicles Analyzed", len(st.session_state.results))
-    k2.metric("Risk Incidents Found", len(st.session_state.results[st.session_state.results['Risk Level'] == 'HIGH']))
-    st.dataframe(st.session_state.results, use_container_width=True)
-    
-    pdf = st.session_state.analyzer.generate_pdf(st.session_state.results)
-    st.download_button("📥 DOWNLOAD OFFICIAL AUDIT REPORT", data=pdf, file_name="Audit_Report.pdf", mime="application/pdf")
+st.sidebar.title("⚙️ Analysis Settings")
 
-# About the Developer
+confidence = st.sidebar.slider(
+    "Detection Confidence",
+    0.1,
+    1.0,
+    0.5
+)
+
+speed_limit = st.sidebar.number_input(
+    "Speed Limit (km/h)",
+    20,
+    200,
+    70
+)
+
+lane_count = st.sidebar.number_input(
+    "Lane Count",
+    1,
+    10,
+    4
+)
+
+# --------------------------------------------------
+# METRICS ROW
+# --------------------------------------------------
+
+c1, c2, c3, c4 = st.columns(4)
+
+with c1:
+    st.metric("Vehicles", "0")
+
+with c2:
+    st.metric("Violations", "0")
+
+with c3:
+    st.metric("Avg Speed", "0 km/h")
+
+with c4:
+    st.metric("Density", "LOW")
+
 st.divider()
-st.markdown("## 👨‍💻 About the Developer")
-col_img, col_txt = st.columns([1, 4])
 
-with col_img:
-    st.image("https://github.com/kalyansiddamalla.png", width=150)
+# --------------------------------------------------
+# UPLOAD SECTION
+# --------------------------------------------------
 
-with col_txt:
-    st.markdown("### **Kalyan Siddamalla**")
-    st.markdown("**MSc Data Science | AI Researcher**")
-    st.write("Bridging the gap between raw traffic data and actionable safety intelligence through advanced computer vision.")
-    st.markdown("[🔗 LinkedIn](https://www.linkedin.com/in/kalyansiddamalla2707/) | [🐙 GitHub](https://github.com/kalyansiddamalla)")
+left, right = st.columns([1, 1])
+
+with left:
+
+    st.subheader("📹 Upload Traffic Footage")
+
+    uploaded_file = st.file_uploader(
+        "Choose MP4 video",
+        type=["mp4"]
+    )
+
+    run_analysis = st.button(
+        "🚀 Run Analysis",
+        use_container_width=True
+    )
+
+with right:
+
+    st.subheader("ℹ️ Features")
+
+    st.info("""
+    ✔ Vehicle Detection
+
+    ✔ Speed Monitoring
+
+    ✔ Traffic Density Analysis
+
+    ✔ Risk Assessment
+
+    ✔ AI Generated Reports
+
+    ✔ Driver Behaviour Insights
+    """)
+
+# --------------------------------------------------
+# ANALYSIS
+# --------------------------------------------------
+
+if uploaded_file and run_analysis:
+
+    analyzer = TrafficAnalyzer()
+
+    with st.spinner("Processing traffic footage..."):
+
+        temp_file = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=".mp4"
+        )
+
+        temp_file.write(uploaded_file.read())
+        temp_file.close()
+
+        try:
+
+            if hasattr(analyzer, "process_video"):
+
+                results = analyzer.process_video(
+                    temp_file.name,
+                    {
+                        "confidence": confidence,
+                        "speed_limit": speed_limit,
+                        "lane_count": lane_count
+                    }
+                )
+
+                st.success("Analysis completed")
+
+                if isinstance(results, pd.DataFrame):
+
+                    st.subheader("📊 Analysis Results")
+
+                    st.dataframe(
+                        results,
+                        use_container_width=True
+                    )
+
+                    st.metric(
+                        "Vehicles Analysed",
+                        len(results)
+                    )
+
+                else:
+
+                    st.write(results)
+
+            else:
+
+                st.warning(
+                    "process_video() not found in processor.py"
+                )
+
+        except Exception as e:
+
+            st.error(f"Analysis failed: {e}")
+
+# --------------------------------------------------
+# FOOTER
+# --------------------------------------------------
+
+st.divider()
+
+st.caption(
+    "GuardianAI Fleet Auditor • Powered by Streamlit & Computer Vision"
+)
