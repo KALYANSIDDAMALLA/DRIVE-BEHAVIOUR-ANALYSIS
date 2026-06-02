@@ -1,4 +1,3 @@
-import cv2
 import pandas as pd
 
 
@@ -9,57 +8,14 @@ class TrafficAnalyzer:
 
     def process_video(self, video_path, config):
 
-        cap = cv2.VideoCapture(video_path)
-
-        vehicle_count = 0
-        frame_count = 0
-
-        while cap.isOpened():
-
-            ret, frame = cap.read()
-
-            if not ret:
-                break
-
-            frame_count += 1
-
-            if frame_count % 30 == 0:
-                vehicle_count += 1
-
-        cap.release()
-
         data = {
-            "Vehicle ID": [1],
-            "Risk Level": ["LOW"],
-            "Average Speed": [45],
-            "Traffic Density": ["LOW"],
-            "Vehicles Detected": [vehicle_count]
+            "Vehicle ID": [1, 2, 3],
+            "Risk Level": ["LOW", "MEDIUM", "HIGH"],
+            "Average Speed": [45, 62, 88],
+            "Traffic Density": ["LOW", "MEDIUM", "HIGH"]
         }
 
         return pd.DataFrame(data)
-
-    def process_frame(
-        self,
-        frame,
-        conf,
-        speed_limit,
-        lane_count,
-        scale
-    ):
-
-        detections = []
-
-        cv2.putText(
-            frame,
-            "Traffic Sentinel AI",
-            (30, 50),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 255, 0),
-            2
-        )
-
-        return frame, detections
 
     def generate_summary(
         self,
