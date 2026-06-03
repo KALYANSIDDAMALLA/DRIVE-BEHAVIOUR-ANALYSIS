@@ -8,7 +8,7 @@ from processor import TrafficAnalyzer
 # --------------------------------------------------
 
 st.set_page_config(
-    page_title="GuardianAI Fleet Auditor",
+    page_title="GuardianAI Auditor",
     page_icon="🚦",
     layout="wide"
 )
@@ -62,7 +62,7 @@ st.markdown("""
 st.markdown(
     """
     <div class='big-title'>
-        🚦 GuardianAI Fleet Auditor
+        🚦 GuardianAI Auditor
     </div>
 
     <div class='subtitle'>
@@ -227,5 +227,5 @@ if uploaded_file and run_analysis:
 st.divider()
 
 st.caption(
-    "GuardianAI Fleet Auditor • Powered by Streamlit & Computer Vision"
+    "GuardianAI Auditor • Powered by Streamlit & Computer Vision"
 )
